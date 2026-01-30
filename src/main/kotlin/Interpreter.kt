@@ -168,7 +168,7 @@ class Interpreter : PortugolPPBaseVisitor<Value>() {
     ): (List<Value>) -> Value {
         return { args ->
             val declaredParameters = ctx.listaParams()?.param()?.size ?: 0
-            if (args.size > declaredParameters) throw SemanticError("Função '$name' recebeu ${args.size} parâmetros, mas espera $declaredParameters")
+            if (args.size > declaredParameters) throw SemanticError("Funcao '$name' recebeu ${args.size} parametros, mas espera $declaredParameters")
             ctx.listaParams()?.param()?.forEachIndexed { i, param ->
                 if (i < args.size) closure.define(param.ID().text, args[i])
             }
@@ -214,7 +214,7 @@ class Interpreter : PortugolPPBaseVisitor<Value>() {
 
     override fun visitDeclaracaoSe(ctx: DeclaracaoSeContext): Value {
         val condition = visit(ctx.expressao())
-        if (condition !is Value.Logic) throw SemanticError("Condição do 'if' deve ser lógica")
+        if (condition !is Value.Logic) throw SemanticError("Condicaoo do 'if' deve ser logica")
         return if (condition.value) visit(ctx.declaracao(0)) else ctx.declaracao(1)?.let { visit(it) } ?: Value.Null
     }
 
@@ -248,7 +248,7 @@ class Interpreter : PortugolPPBaseVisitor<Value>() {
 
             acess != null -> {
                 val obj = visit(acess.primario()) as? Value.Object
-                    ?: throw SemanticError("Não é possível atribuir a uma propriedade de um não-objeto")
+                    ?: throw SemanticError("Nao é possível atribuir a uma propriedade de um nao objeto")
                 obj.fields[acess.ID().text] = rhs
                 rhs
             }
@@ -257,9 +257,9 @@ class Interpreter : PortugolPPBaseVisitor<Value>() {
                 when (val container = visit(arr.primario())) {
                     is Value.List -> {
                         val i = visit(arr.expressao(0)) as? Value.Integer
-                            ?: throw SemanticError("Índice de lista deve ser um número inteiro")
+                            ?: throw SemanticError("Indice de lista deve ser um numero inteiro")
                         val index = i.value
-                        if (index < 0) throw SemanticError("Índice negativo não permitido: $index")
+                        if (index < 0) throw SemanticError("Indice negativo nao permitido: $index")
                         container.elements[index] = rhs
                         rhs
                     }
@@ -277,7 +277,7 @@ class Interpreter : PortugolPPBaseVisitor<Value>() {
                 }
             }
 
-            else -> throw SemanticError("Erro de sintaxe na atribuição")
+            else -> throw SemanticError("Erro de sintaxe na atribuicao")
         }
     }
 
@@ -389,10 +389,10 @@ class Interpreter : PortugolPPBaseVisitor<Value>() {
                 "-" -> when (operand) {
                     is Value.Integer -> Value.Integer(-operand.value)
                     is Value.Real -> Value.Real(-operand.value)
-                    else -> throw SemanticError("Operador '-' requer valor numérico")
+                    else -> throw SemanticError("Operador '-' requer valor numerico")
                 }
 
-                else -> throw SemanticError("Operador unário desconhecido: $operator")
+                else -> throw SemanticError("Operador unario desconhecido: $operator")
             }
         }
         return visit(ctx.getChild(0))
@@ -515,7 +515,7 @@ class Interpreter : PortugolPPBaseVisitor<Value>() {
             }
 
             iterationsNum++
-            println("Iteração $iterationsNum do loop")
+            println("Iteracao $iterationsNum do loop")
 
             try {
                 visit(ctx.declaracao())
@@ -623,11 +623,11 @@ class Interpreter : PortugolPPBaseVisitor<Value>() {
                 is Value.List -> {
                     when {
                         secondIndex !is Value.Integer -> {
-                            throw SemanticError("Segundo índice deve ser um número inteiro para acessar uma lista")
+                            throw SemanticError("Segundo indice deve ser um número inteiro para acessar uma lista")
                         }
 
                         secondIndex.value < 0 || secondIndex.value >= firstElement.elements.size -> {
-                            throw SemanticError("Segundo índice fora dos limites da lista: ${secondIndex.value}")
+                            throw SemanticError("Segundo indice fora dos limites da lista: ${secondIndex.value}")
                         }
 
                         else -> return firstElement.elements[secondIndex.value]

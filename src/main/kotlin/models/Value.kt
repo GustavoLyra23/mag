@@ -32,7 +32,11 @@ sealed class Value {
 
     data class Interface(val name: String, val signatures: kotlin.collections.Map<String, Method>) : Value()
 
-    class Method(val nome: String, val parametros: kotlin.collections.List<Param>, val tipoRetorno: String? = null)
+    class Method(
+        val name: String,
+        val parameters: kotlin.collections.List<Param>,
+        val returnType: String? = null
+    )
 
     data class Fun(
         val name: String,
@@ -65,7 +69,7 @@ sealed class Value {
         is Text -> value
         is Logic -> if (value) "verdadeiro" else "falso"
         is Object -> "[Objeto $klass]"
-        is Fun -> "[função $name]"
+        is Fun -> "[funcao $name]"
         Null -> "nulo"
         is Interface -> "[Interface]"
         else -> super.toString()

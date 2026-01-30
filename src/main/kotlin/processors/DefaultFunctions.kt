@@ -7,8 +7,8 @@ import kotlinx.coroutines.runBlocking
 import models.Environment
 import models.Value
 import models.errors.ArquivoException
-import processors.FileIOProcessor.writeFile
 import processors.FileIOProcessor.readFile
+import processors.FileIOProcessor.writeFile
 import java.util.*
 
 fun defineDefaultFunctions(global: Environment) {
@@ -23,8 +23,8 @@ fun registerIOFunctions(global: Environment) {
         Scanner(System.`in`).nextLine().let { Value.Text(it) }
     })
     global.define("readFile", Value.Fun("readFile", null, "Texto", global) { args ->
-        if (args.isEmpty()) throw RuntimeException("Função readFile requer um argumento (caminho do arquivo)")
-        if (args.size > 1) throw RuntimeException("Função readFile aceita apenas um argumento")
+        if (args.isEmpty()) throw RuntimeException("Funcao readFile requer um argumento (caminho do arquivo)")
+        if (args.size > 1) throw RuntimeException("Funcaoo readFile aceita apenas um argumento")
 
         val argVal = args[0]
         if (argVal !is Value.Text) {
@@ -98,7 +98,7 @@ fun registerThreadFunctions(global: Environment) {
 fun registerExceptionsFunctions(global: Environment) {
     global.define("jogarError", Value.Fun("jogarError", null, null, global) { args ->
         if (args.isEmpty()) {
-            throw RuntimeException("Função jogarError requer um argumento (mensagem de erro)")
+            throw RuntimeException("Funcaoo jogarError requer um argumento (mensagem de erro)")
         }
         val msg = args[0]
         if (msg !is Value.Text) {
@@ -111,14 +111,14 @@ fun registerExceptionsFunctions(global: Environment) {
 fun registerCollectionsFunctions(global: Environment) {
     global.define("tamanho", Value.Fun("tamanho", null, "Inteiro", global) { args ->
         if (args.isEmpty()) {
-            throw RuntimeException("Função tamanho requer um argumento (lista, mapa ou texto)")
+            throw RuntimeException("Funcao tamanho requer um argumento (lista, mapa ou texto)")
         }
 
         when (val arg = args[0]) {
             is Value.List -> Value.Integer(arg.elements.size)
             is Value.Map -> Value.Integer(arg.elements.size)
             is Value.Text -> Value.Integer(arg.value.length)
-            else -> throw RuntimeException("Função tamanho só funciona com listas, mapas ou textos")
+            else -> throw RuntimeException("Funcao tamanho só funciona com listas, mapas ou textos")
         }
     })
 }
