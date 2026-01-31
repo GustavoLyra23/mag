@@ -4,7 +4,6 @@ import models.enums.BasicTypes
 import org.gustavolyra.PlarParser
 
 sealed class Value {
-
     data class Integer(val value: Int) : Value()
 
     data class Real(val value: Double) : Value()

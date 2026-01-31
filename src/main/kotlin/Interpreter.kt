@@ -75,7 +75,6 @@ class Interpreter : PlarBaseVisitor<Value>() {
             tree.importarDeclaracao()?.forEach { import ->
                 visitImportarDeclaracao(import)
             }
-
             visitInterfaces(tree, global)
             visitClasses(tree, global)
             tree.declaracao().forEach { visit(it) }
@@ -384,7 +383,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         }
         return visit(ctx.getChild(0))
     }
-    
+
     private fun findPropertyInHierarch(`object`: Value.Object, fieldName: String): Value? {
         val fieldValue = `object`.fields[fieldName]
         if (fieldValue != null) {
@@ -430,9 +429,8 @@ class Interpreter : PlarBaseVisitor<Value>() {
         if (`object`.superClass != null) {
             val baseClass = global.getClass(`object`.superClass) ?: return null
             val baseMethod = baseClass.declaracaoFuncao().find { it.ID().text == methodName }
-            if (baseMethod != null) {
+            if (baseMethod != null)
                 return baseMethod
-            }
             val baseSuperClass = global.getSuperClasse(baseClass)
             if (baseSuperClass != null) {
                 val objectBase = Value.Object(`object`.superClass, mutableMapOf(), baseSuperClass)

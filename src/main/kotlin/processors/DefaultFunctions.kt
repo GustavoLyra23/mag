@@ -1,14 +1,21 @@
 package processors
 
 import extractValueToPrint
+import helpers.defineSocketFromArgs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import models.Environment
 import models.Value
 import models.errors.ArquivoException
+import models.errors.InputException
+import models.errors.PlarRuntimeException
 import processors.FileIOProcessor.readFile
 import processors.FileIOProcessor.writeFile
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.PrintWriter
+import java.net.ServerSocket
 import java.util.*
 
 fun defineDefaultFunctions(global: Environment) {
@@ -65,6 +72,40 @@ fun registerIOFunctions(global: Environment) {
         println(values.joinToString(" "))
         Value.Null
     })
+    //TODO: rever funcoes socket
+    global.define("ler_socket", Value.Fun("ler_socket", null, "Texto", global) { args ->
+        try {
+            val (host, port) = defineSocketFromArgs(args)
+            val socket = ServerSocket()
+            socket.bind(java.net.InetSocketAddress(host, port))
+            val input = socket.accept().getInputStream()
+            val reader = BufferedReader(InputStreamReader(input))
+            val response = reader.readLine()
+            socket.close()
+            Value.Text(response)
+        } catch (e: Exception) {
+            throw PlarRuntimeException("Nao foi possivel configurar o socket: ${e.message}")
+        }
+    })
+    global.define("escrever_socket", Value.Fun("escrever_socket", null, null, global) { args ->
+        try {
+            if (args.isEmpty() || args.size != 1 && args.size < 3)
+                throw InputException("argumentos invalidos pra socket_write")
+            val (host, port) = defineSocketFromArgs(args)
+            val socket = ServerSocket()
+            socket.bind(java.net.InetSocketAddress(host, port))
+            val output = socket.accept().getOutputStream()
+            val writer = PrintWriter(output, true)
+            val buffer = (if (args.size == 1) args[0] else args[2]) as Value.Text;
+            writer.println(buffer.value)
+            socket.close()
+            Value.Null
+        } catch (e: Exception) {
+            throw PlarRuntimeException("Nao foi possivel configurar o socket: ${e.message}")
+        }
+    })
+
+
 }
 
 fun registerThreadFunctions(global: Environment) {
