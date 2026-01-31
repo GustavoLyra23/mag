@@ -52,13 +52,13 @@ cd pplus
 Using JAR
 
 ```bash
-java -jar build/libs/portugolpp.jar programa.pplus
+java -jar build/libs/portugolpp.jar programa.plar
 ```
 
 #### Using Windows exe
 
 ```bash
-./portugolpp.exe programa.pplus
+./portugolpp.exe programa.plar
 ```
 <div>
 <img src="https://img.shields.io/badge/status-desenvolvimento-green.svg" alt="Status" />
