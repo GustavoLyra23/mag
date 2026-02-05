@@ -5,7 +5,7 @@ import models.Value
 class BreakException : RuntimeException()
 class ContinueException : RuntimeException()
 class RetornoException(val value: Value) : RuntimeException()
-// achar um use case pra essa exception...
+// find a use case for this use case...
 class MainExecutionException(msg: String) : RuntimeException(msg)
 class InputException(msg: String) : RuntimeException(msg)
 class PlarRuntimeException(msg: String) : RuntimeException(msg)
