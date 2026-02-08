@@ -1,9 +1,9 @@
 package models
 
 import models.errors.MemoryError
-import org.gustavolyra.PlarParser
-import org.gustavolyra.PlarParser.DeclaracaoClasseContext
-import org.gustavolyra.PlarParser.DeclaracaoInterfaceContext
+import org.gustavolyra.MagParser
+import org.gustavolyra.MagParser.DeclaracaoClasseContext
+import org.gustavolyra.MagParser.DeclaracaoInterfaceContext
 
 class Environment(val enclosing: Environment? = null) {
     private val values = mutableMapOf<String, Value>()
@@ -44,7 +44,7 @@ class Environment(val enclosing: Environment? = null) {
         return result
     }
 
-    fun getSuperClasse(classeContext: PlarParser.DeclaracaoClasseContext): String? {
+    fun getSuperClasse(classeContext: MagParser.DeclaracaoClasseContext): String? {
         for (i in 0 until classeContext.childCount) {
             if (classeContext.getChild(i).text == "estende" && i + 1 < classeContext.childCount) {
                 return classeContext.getChild(i + 1).text

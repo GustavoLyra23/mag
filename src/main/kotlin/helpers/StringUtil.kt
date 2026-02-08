@@ -1,5 +1,5 @@
 import models.Value
-import org.gustavolyra.PlarParser
+import org.gustavolyra.MagParser
 
 fun extractValueToPrint(value: Value): String {
     return when (value) {
@@ -49,4 +49,4 @@ fun extractValueToString(value: Value): String {
     }
 }
 
-fun isDot(ctx: PlarParser.ChamadaContext, i: Int) = i < ctx.childCount && ctx.getChild(i).text == "."
+fun isDot(ctx: MagParser.ChamadaContext, i: Int) = i < ctx.childCount && ctx.getChild(i).text == "."

@@ -11,7 +11,7 @@ import models.Environment
 import models.Value
 import models.errors.ArquivoException
 import models.errors.InputException
-import models.errors.PlarRuntimeException
+import models.errors.MagRuntimeException
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
@@ -37,9 +37,9 @@ fun registerIOFunctions(global: Environment) {
             Path.of(System.getProperty("user.dir")).toAbsolutePath().normalize().toString()
         )
     })
-    global.define("readFile", Value.Fun("readFile", null, "Texto", global) { args ->
-        if (args.isEmpty()) throw RuntimeException("Funcao readFile requer um argumento (caminho do arquivo)")
-        if (args.size > 1) throw RuntimeException("Funcaoo readFile aceita apenas um argumento")
+    global.define("ler_arquivo", Value.Fun("ler_arquivo", null, "Texto", global) { args ->
+        if (args.isEmpty()) throw RuntimeException("Funcao ler_arquivo requer um argumento (caminho do arquivo)")
+        if (args.size > 1) throw RuntimeException("Funcaoo ler_arquivo aceita apenas um argumento")
 
         val argVal = args[0]
         if (argVal !is Value.Text) {
@@ -52,8 +52,8 @@ fun registerIOFunctions(global: Environment) {
             throw ArquivoException("Erro ao ler arquivo '${argVal.value}': ${e.message}")
         }
     })
-    global.define("writeFile", Value.Fun("writeFile", null, null, global) { args ->
-        require(args.size in 2..3) { "Função writeFile requer 2 ou 3 argumentos" }
+    global.define("escrever_arquivo", Value.Fun("escrever_arquivo", null, null, global) { args ->
+        require(args.size in 2..3) { "Função escrever_arquivo requer 2 ou 3 argumentos" }
         val (path, data) = args.take(2)
         val append = args.getOrNull(2)
 
@@ -91,7 +91,7 @@ fun registerIOFunctions(global: Environment) {
             socket.close()
             Value.Text(response)
         } catch (e: Exception) {
-            throw PlarRuntimeException("Nao foi possivel configurar o socket: ${e.message}")
+            throw MagRuntimeException("Nao foi possivel configurar o socket: ${e.message}")
         }
     })
     global.define("escrever_socket", Value.Fun("escrever_socket", null, null, global) { args ->
@@ -107,7 +107,7 @@ fun registerIOFunctions(global: Environment) {
             socket.close()
             Value.Null
         } catch (e: Exception) {
-            throw PlarRuntimeException("Nao foi possivel configurar o socket: ${e.message}")
+            throw MagRuntimeException("Nao foi possivel configurar o socket: ${e.message}")
         }
     })
 }

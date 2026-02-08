@@ -1,4 +1,4 @@
-grammar Plar;
+grammar Mag;
 
 programa
     : importarDeclaracao* declaracao* EOF
@@ -188,9 +188,8 @@ mapaLiteral
     ;
 
 
-// Regras do lexer
 ID: [a-zA-Z_][a-zA-Z0-9_]*;
-NUMERO: [0-9]+ ('.' [0-9]*)? | '.' [0-9]+; // Ajustado para suportar 42., .5, etc.
+NUMERO: [0-9]+ ('.' [0-9]*)? | '.' [0-9]+;
 TEXTO_LITERAL: '"' (~["\r\n] | '\\"')* '"';
 ESPACO: [ \t\r\n\f]+ -> skip;
 COMENTARIO: '//' ~[\r\n]* -> skip;

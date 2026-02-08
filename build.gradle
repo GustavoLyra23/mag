@@ -54,7 +54,7 @@ kotlin {
 }
 
 shadowJar {
-    archiveBaseName.set('plar')
+    archiveBaseName.set('mag')
     archiveClassifier.set('')
     archiveVersion.set('')
     manifest {
@@ -66,7 +66,7 @@ launch4j {
     jarTask = tasks.shadowJar
     copyConfigurable = []
     mainClassName = 'MainKt'
-    outfile = 'plar.exe'
+    outfile = 'mag.exe'
     headerType = 'console'
     jreMinVersion = '21'
 }

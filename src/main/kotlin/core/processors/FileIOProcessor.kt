@@ -11,7 +11,7 @@ object FileIOProcessor {
             throw RuntimeException("Erro ao ler o arquivo: $path", e)
         }
     }
-
+    
     fun writeFile(path: String, data: String, append: Boolean = false) {
         try {
             val file = File(path)

@@ -1,7 +1,7 @@
 package models
 
 import models.enums.BasicTypes
-import org.gustavolyra.PlarParser
+import org.gustavolyra.MagParser
 
 sealed class Value {
     data class Integer(val value: Int) : Value()
@@ -40,7 +40,7 @@ sealed class Value {
     data class Fun(
         val name: String,
         //TODO: find a better use case for this field...
-        val declaration: PlarParser.DeclaracaoFuncaoContext? = null,
+        val declaration: MagParser.DeclaracaoFuncaoContext? = null,
         var returnType: String? = null,
         val closure: Environment,
         var implementation: ((kotlin.collections.List<Value>) -> Value)? = null,

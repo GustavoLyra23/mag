@@ -3,8 +3,8 @@ package core.processors
 import models.Environment
 import models.Value
 import models.errors.SemanticError
-import org.gustavolyra.PlarParser.DeclaracaoClasseContext
-import org.gustavolyra.PlarParser.ProgramaContext
+import org.gustavolyra.MagParser.DeclaracaoClasseContext
+import org.gustavolyra.MagParser.ProgramaContext
 
 fun getSuperClass(ctx: DeclaracaoClasseContext): String? =
     if (ctx.childCount > 3 && ctx.getChild(2).text == "estende") ctx.getChild(3).text else null
@@ -12,7 +12,7 @@ fun getSuperClass(ctx: DeclaracaoClasseContext): String? =
 
 fun validateSuperClass(superClass: String, className: String, global: Environment) {
     global.getClass(superClass)
-        ?: throw SemanticError("Classe base '$superClass' não encontrada para a classe '$className'")
+        ?: throw SemanticError("Classe base '$superClass' nao encontrada para a classe '$className'")
 }
 
 fun getIndexFromWord(ctx: DeclaracaoClasseContext, word: String): Int {
@@ -39,7 +39,7 @@ fun validateInterface(
 ) {
     interfaces.forEach { nome ->
         global.getInterface(nome)
-            ?: throw SemanticError("Interface '$nome' não encontrada")
+            ?: throw SemanticError("Interface '$nome' nao encontrada")
         if (!validateInterfaceImplementation(classeCtx, nome, global)) {
             throw SemanticError("A classe '$className' não implementa todos os métodos da interface '$nome'")
         }

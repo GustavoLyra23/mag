@@ -9,13 +9,13 @@ import models.enums.LOOP
 import models.errors.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.gustavolyra.PlarBaseVisitor
-import org.gustavolyra.PlarLexer
-import org.gustavolyra.PlarParser
+import org.gustavolyra.MagBaseVisitor
+import org.gustavolyra.MagLexer
+import org.gustavolyra.MagParser
 import java.nio.file.Files
 
 @Suppress("REDUNDANT_OVERRIDE")
-class Interpreter : PlarBaseVisitor<Value>() {
+class Interpreter : MagBaseVisitor<Value>() {
     private var global = Environment()
 
     // actual exec environment
@@ -30,13 +30,13 @@ class Interpreter : PlarBaseVisitor<Value>() {
         defineDefaultFunctions(global)
     }
 
-    override fun visitImportarDeclaracao(ctx: PlarParser.ImportarDeclaracaoContext): Value {
+    override fun visitImportarDeclaracao(ctx: MagParser.ImportarDeclaracaoContext): Value {
         val fileName = ctx.TEXTO_LITERAL().text.removeSurrounding("\"")
         processImport(fileName)
         return Value.Null
     }
 
-    private fun processModuleDeclarations(tree: PlarParser.ProgramaContext) {
+    private fun processModuleDeclarations(tree: MagParser.ProgramaContext) {
         tree.declaracao().forEach { dec ->
             dec.declaracaoInterface()?.let(::visitDeclaracaoInterface)
             dec.declaracaoClasse()?.let(::visitDeclaracaoClasse)
@@ -52,9 +52,9 @@ class Interpreter : PlarBaseVisitor<Value>() {
         try {
             val path = solvePath(filName)
             val fileContent = Files.readString(path)
-            val lexer = PlarLexer(CharStreams.fromString(fileContent))
+            val lexer = MagLexer(CharStreams.fromString(fileContent))
             val tokens = CommonTokenStream(lexer)
-            val parser = PlarParser(tokens)
+            val parser = MagParser(tokens)
             val tree = parser.programa()
 
             tree.importarDeclaracao().forEach { import ->
@@ -69,7 +69,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
 
     //TODO check if it is necessary to visit imports first
     // or visit as it goes
-    fun interpret(tree: PlarParser.ProgramaContext) {
+    fun interpret(tree: MagParser.ProgramaContext) {
         try {
             tree.importarDeclaracao()?.forEach { import ->
                 visitImportarDeclaracao(import)
@@ -82,13 +82,13 @@ class Interpreter : PlarBaseVisitor<Value>() {
         }
     }
 
-    override fun visitDeclaracaoInterface(ctx: PlarParser.DeclaracaoInterfaceContext): Value {
+    override fun visitDeclaracaoInterface(ctx: MagParser.DeclaracaoInterfaceContext): Value {
         val interfaceName = ctx.ID().text
         global.setInterface(interfaceName, ctx)
         return Value.Null
     }
 
-    override fun visitDeclaracaoTentarCapturar(ctx: PlarParser.DeclaracaoTentarCapturarContext?): Value {
+    override fun visitDeclaracaoTentarCapturar(ctx: MagParser.DeclaracaoTentarCapturarContext?): Value {
         try {
             visit(ctx?.bloco(0))
         } catch (_: Exception) {
@@ -97,7 +97,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return Value.Null
     }
 
-    override fun visitDeclaracaoClasse(ctx: PlarParser.DeclaracaoClasseContext): Value {
+    override fun visitDeclaracaoClasse(ctx: MagParser.DeclaracaoClasseContext): Value {
         val className = ctx.ID(0).text
 
         getSuperClass(ctx)?.let { sc ->
@@ -111,7 +111,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return Value.Null
     }
 
-    override fun visitDeclaracaoVar(ctx: PlarParser.DeclaracaoVarContext): Value {
+    override fun visitDeclaracaoVar(ctx: MagParser.DeclaracaoVarContext): Value {
         val name = ctx.ID().text
         val type = ctx.tipo()?.text
         val value = when {
@@ -133,7 +133,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return Value.Null
     }
 
-    override fun visitDeclaracaoFuncao(ctx: PlarParser.DeclaracaoFuncaoContext): Value {
+    override fun visitDeclaracaoFuncao(ctx: MagParser.DeclaracaoFuncaoContext): Value {
         val name = ctx.ID()?.text ?: ""
         val returnType = ctx.tipo()?.text
         if (isReturnInvalid(returnType, global)) throw SemanticError("Tipo de retorno invalido: $returnType")
@@ -149,13 +149,12 @@ class Interpreter : PlarBaseVisitor<Value>() {
     }
 
     private fun definirImplementacao(
-        ctx: PlarParser.DeclaracaoFuncaoContext, name: String, closure: Environment
+        ctx: MagParser.DeclaracaoFuncaoContext, name: String, closure: Environment
     ): (List<Value>) -> Value {
         return { args ->
             val declaredParameters = ctx.listaParams()?.param()?.size ?: 0
             if (args.size > declaredParameters) throw SemanticError(
-                "Funcao recebeu ${args.size} " +
-                    "parametros, mas espera $declaredParameters"
+                "Funcao recebeu ${args.size} " + "parametros, mas espera $declaredParameters"
             )
             ctx.listaParams()?.param()?.forEachIndexed { i, param ->
                 if (i < args.size) closure.define(param.ID().text, args[i])
@@ -181,7 +180,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
     }
 
     //TODO: refactor visit return declaration
-    override fun visitDeclaracaoRetornar(ctx: PlarParser.DeclaracaoRetornarContext): Value {
+    override fun visitDeclaracaoRetornar(ctx: MagParser.DeclaracaoRetornarContext): Value {
         val returnVal = ctx.expressao()?.let { visit(it) } ?: Value.Null
         // apenas valida se estivermos dentro de uma funcao
         if (actualFunction != null && actualFunction!!.returnType != null) {
@@ -200,13 +199,13 @@ class Interpreter : PlarBaseVisitor<Value>() {
         throw RetornoException(returnVal)
     }
 
-    override fun visitDeclaracaoSe(ctx: PlarParser.DeclaracaoSeContext): Value {
+    override fun visitDeclaracaoSe(ctx: MagParser.DeclaracaoSeContext): Value {
         val condition = visit(ctx.expressao())
         if (condition !is Value.Logic) throw SemanticError("Condicaoo do 'if' deve ser logica")
         return if (condition.value) visit(ctx.declaracao(0)) else ctx.declaracao(1)?.let { visit(it) } ?: Value.Null
     }
 
-    override fun visitBloco(ctx: PlarParser.BlocoContext): Value {
+    override fun visitBloco(ctx: MagParser.BlocoContext): Value {
         val previous = environment
         environment = Environment(previous)
         environment.thisObject = previous.thisObject
@@ -218,9 +217,9 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return Value.Null
     }
 
-    override fun visitExpressao(ctx: PlarParser.ExpressaoContext): Value = visit(ctx.getChild(0))
+    override fun visitExpressao(ctx: MagParser.ExpressaoContext): Value = visit(ctx.getChild(0))
 
-    override fun visitAtribuicao(ctx: PlarParser.AtribuicaoContext): Value {
+    override fun visitAtribuicao(ctx: MagParser.AtribuicaoContext): Value {
         ctx.logicaOu()?.let { return visit(it) }
         val rhs = when {
             ctx.expressao() != null -> visit(ctx.expressao())
@@ -236,7 +235,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
 
             acess != null -> {
                 val obj = visit(acess.primario()) as? Value.Object
-                    ?: throw SemanticError("Nao é possível atribuir a uma propriedade de um nao objeto")
+                    ?: throw SemanticError("Nao foi possível atribuir a uma propriedade de um nao objeto")
                 obj.fields[acess.ID().text] = rhs
                 rhs
             }
@@ -269,7 +268,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         }
     }
 
-    override fun visitAcesso(ctx: PlarParser.AcessoContext): Value {
+    override fun visitAcesso(ctx: MagParser.AcessoContext): Value {
         val obj = visit(ctx.primario())
 
         if (obj !is Value.Object) {
@@ -282,7 +281,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return value
     }
 
-    override fun visitLogicaOu(ctx: PlarParser.LogicaOuContext): Value {
+    override fun visitLogicaOu(ctx: MagParser.LogicaOuContext): Value {
         var left = visit(ctx.logicaE(0))
         for (i in 1 until ctx.logicaE().size) {
             if (left is Value.Logic && left.value) return Value.Logic(true)
@@ -293,7 +292,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return left
     }
 
-    override fun visitLogicaE(ctx: PlarParser.LogicaEContext): Value {
+    override fun visitLogicaE(ctx: MagParser.LogicaEContext): Value {
         var left = visit(ctx.igualdade(0))
         for (i in 1 until ctx.igualdade().size) {
             if (left is Value.Logic && !left.value) return Value.Logic(false)
@@ -304,7 +303,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return left
     }
 
-    override fun visitIgualdade(ctx: PlarParser.IgualdadeContext): Value {
+    override fun visitIgualdade(ctx: MagParser.IgualdadeContext): Value {
         var left = visit(ctx.comparacao(0))
 
         for (i in 1 until ctx.comparacao().size) {
@@ -331,7 +330,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return left
     }
 
-    override fun visitComparacao(ctx: PlarParser.ComparacaoContext): Value {
+    override fun visitComparacao(ctx: MagParser.ComparacaoContext): Value {
         var left = visit(ctx.adicao(0))
         for (i in 1 until ctx.adicao().size) {
             val operator = ctx.getChild(i * 2 - 1).text
@@ -348,7 +347,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
     }
 
 
-    override fun visitAdicao(ctx: PlarParser.AdicaoContext): Value {
+    override fun visitAdicao(ctx: MagParser.AdicaoContext): Value {
         var left = visit(ctx.multiplicacao(0))
         for (i in 1 until ctx.multiplicacao().size) {
             val operator = ctx.getChild(i * 2 - 1).text
@@ -358,7 +357,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return left
     }
 
-    override fun visitMultiplicacao(ctx: PlarParser.MultiplicacaoContext): Value {
+    override fun visitMultiplicacao(ctx: MagParser.MultiplicacaoContext): Value {
         var left = visit(ctx.unario(0))
         for (i in 1 until ctx.unario().size) {
             val operator = ctx.getChild(i * 2 - 1).text
@@ -368,7 +367,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return left
     }
 
-    override fun visitUnario(ctx: PlarParser.UnarioContext): Value {
+    override fun visitUnario(ctx: MagParser.UnarioContext): Value {
         if (ctx.childCount == 2) {
             val operator = ctx.getChild(0).text
             val operand = visit(ctx.unario())
@@ -424,15 +423,14 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return `object`
     }
 
-    private fun findMethodInHierarchy(`object`: Value.Object, methodName: String): PlarParser.DeclaracaoFuncaoContext? {
+    private fun findMethodInHierarchy(`object`: Value.Object, methodName: String): MagParser.DeclaracaoFuncaoContext? {
         val `class` = global.getClass(`object`.klass) ?: return null
         val method = `class`.declaracaoFuncao().find { it.ID().text == methodName }
         if (method != null) return method
         if (`object`.superClass != null) {
             val baseClass = global.getClass(`object`.superClass) ?: return null
             val baseMethod = baseClass.declaracaoFuncao().find { it.ID().text == methodName }
-            if (baseMethod != null)
-                return baseMethod
+            if (baseMethod != null) return baseMethod
             val baseSuperClass = global.getSuperClasse(baseClass)
             if (baseSuperClass != null) {
                 val objectBase = Value.Object(`object`.superClass, mutableMapOf(), baseSuperClass)
@@ -443,15 +441,15 @@ class Interpreter : PlarBaseVisitor<Value>() {
     }
 
 
-    private fun isCall(ctx: PlarParser.ChamadaContext, i: Int, n: Int) = (i + 2) < n && ctx.getChild(i + 2).text == "("
+    private fun isCall(ctx: MagParser.ChamadaContext, i: Int, n: Int) = (i + 2) < n && ctx.getChild(i + 2).text == "("
 
-    private fun extractArgumentsAndIndex(ctx: PlarParser.ChamadaContext, i: Int, n: Int): Pair<List<Value>, Int> {
-        val temArgsCtx = (i + 3) < n && ctx.getChild(i + 3) is PlarParser.ArgumentosContext
-        val arguments = if (temArgsCtx) {
-            val argsCtx = ctx.getChild(i + 3) as PlarParser.ArgumentosContext
+    private fun extractArgumentsAndIndex(ctx: MagParser.ChamadaContext, i: Int, n: Int): Pair<List<Value>, Int> {
+        val hasArgs = (i + 3) < n && ctx.getChild(i + 3) is MagParser.ArgumentosContext
+        val arguments = if (hasArgs) {
+            val argsCtx = ctx.getChild(i + 3) as MagParser.ArgumentosContext
             argsCtx.expressao().map { visit(it) }
         } else emptyList()
-        val step = if (temArgsCtx) 5 else 4
+        val step = if (hasArgs) 5 else 4
         return arguments to step
     }
 
@@ -463,7 +461,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
 
     private fun readProperty(obj: Value.Object, name: String): Value? = findPropertyInHierarch(obj, name)
 
-    override fun visitChamada(ctx: PlarParser.ChamadaContext): Value {
+    override fun visitChamada(ctx: MagParser.ChamadaContext): Value {
         ctx.acessoArray()?.let { return visit(it) }
 
         var r = visit(ctx.primario())
@@ -489,7 +487,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return r
     }
 
-    override fun visitDeclaracaoEnquanto(ctx: PlarParser.DeclaracaoEnquantoContext): Value {
+    override fun visitDeclaracaoEnquanto(ctx: MagParser.DeclaracaoEnquantoContext): Value {
         var iterationsNum = 0
         while (iterationsNum < LOOP.MAX_LOOP.valor) {
             val condicao = visit(ctx.expressao())
@@ -521,7 +519,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return Value.Null
     }
 
-    override fun visitDeclaracaoPara(ctx: PlarParser.DeclaracaoParaContext): Value {
+    override fun visitDeclaracaoPara(ctx: MagParser.DeclaracaoParaContext): Value {
         ctx.declaracaoVar()?.let { visit(it) } ?: ctx.expressao(0)?.let { visit(it) }
         loop@ while (true) {
             val cond = visit(ctx.expressao(0)) as? Value.Logic
@@ -550,7 +548,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return Value.Null
     }
 
-    override fun visitDeclaracaoFacaEnquanto(ctx: PlarParser.DeclaracaoFacaEnquantoContext): Value {
+    override fun visitDeclaracaoFacaEnquanto(ctx: MagParser.DeclaracaoFacaEnquantoContext): Value {
         var iter = 0
         do {
             try {
@@ -573,12 +571,12 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return Value.Null
     }
 
-    override fun visitDeclaracaoQuebra(ctx: PlarParser.DeclaracaoQuebraContext): Value {
+    override fun visitDeclaracaoQuebra(ctx: MagParser.DeclaracaoQuebraContext): Value {
         throw BreakException()
     }
 
     //TODO: ajustar declaracao de listas....
-    override fun visitListaLiteral(ctx: PlarParser.ListaLiteralContext): Value {
+    override fun visitListaLiteral(ctx: MagParser.ListaLiteralContext): Value {
         val index = ctx.NUMERO().text.toInt()
         val list = mutableListOf<Value>()
         while (list.size < index) list.add(Value.Null)
@@ -586,18 +584,18 @@ class Interpreter : PlarBaseVisitor<Value>() {
     }
 
 
-    override fun visitMapaLiteral(ctx: PlarParser.MapaLiteralContext): Value {
+    override fun visitMapaLiteral(ctx: MagParser.MapaLiteralContext): Value {
         return Value.Map()
     }
 
-    private fun validarAcessoArray(ctx: PlarParser.AcessoArrayContext, container: Value.List): Value {
+    private fun validarAcessoArray(ctx: MagParser.AcessoArrayContext, container: Value.List): Value {
         val index = visit(ctx.expressao(0))
         if (index !is Value.Integer) throw SemanticError("Indice de lista deve ser um numero inteiro")
         if (index.value < 0 || index.value >= container.size) throw SemanticError("Indice fora dos limites da lista: ${index.value}")
         return container.elements[index.value]
     }
 
-    private fun validarAcessoMapa(ctx: PlarParser.AcessoArrayContext, container: Value.Map): Value {
+    private fun validarAcessoMapa(ctx: MagParser.AcessoArrayContext, container: Value.Map): Value {
         val key = visit(ctx.expressao(0))
 
         // Para acesso bidimensional em mapas
@@ -639,7 +637,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
         return container.elements[key] ?: Value.Null
     }
 
-    override fun visitAcessoArray(ctx: PlarParser.AcessoArrayContext): Value {
+    override fun visitAcessoArray(ctx: MagParser.AcessoArrayContext): Value {
         return when (val container = visit(ctx.primario())) {
             is Value.List -> validarAcessoArray(ctx, container)
             is Value.Map -> validarAcessoMapa(ctx, container)
@@ -647,11 +645,11 @@ class Interpreter : PlarBaseVisitor<Value>() {
         }
     }
 
-    override fun visitDeclaracaoContinue(ctx: PlarParser.DeclaracaoContinueContext): Value {
+    override fun visitDeclaracaoContinue(ctx: MagParser.DeclaracaoContinueContext): Value {
         throw ContinueException()
     }
 
-    override fun visitChamadaFuncao(ctx: PlarParser.ChamadaFuncaoContext): Value {
+    override fun visitChamadaFuncao(ctx: MagParser.ChamadaFuncaoContext): Value {
         //TODO: implement validation for all parameters
         val args = ctx.argumentos()?.expressao()?.map { visit(it) } ?: emptyList()
         val funcName = ctx.ID().text
@@ -684,7 +682,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
 
 
     private fun executeMethod(
-        `object`: Value.Object, method: PlarParser.DeclaracaoFuncaoContext, arguments: List<Value>
+        `object`: Value.Object, method: MagParser.DeclaracaoFuncaoContext, arguments: List<Value>
     ): Value {
         val envMethod = Environment(global)
         envMethod.thisObject = `object`
@@ -721,11 +719,11 @@ class Interpreter : PlarBaseVisitor<Value>() {
         }
     }
 
-    private fun solveId(ctx: PlarParser.PrimarioContext): Value {
+    private fun solveId(ctx: MagParser.PrimarioContext): Value {
         val name = ctx.ID().text
         if (ctx.childCount > 1 && ctx.getChild(1).text == "(") {
-            val arguments = if (ctx.childCount > 2 && ctx.getChild(2) is PlarParser.ArgumentosContext) {
-                val argsCtx = ctx.getChild(2) as PlarParser.ArgumentosContext
+            val arguments = if (ctx.childCount > 2 && ctx.getChild(2) is MagParser.ArgumentosContext) {
+                val argsCtx = ctx.getChild(2) as MagParser.ArgumentosContext
                 argsCtx.expressao().map { visit(it) }
             } else {
                 emptyList()
@@ -740,8 +738,8 @@ class Interpreter : PlarBaseVisitor<Value>() {
         }
     }
 
-    private fun solveClass(ctx: PlarParser.PrimarioContext): Value {
-        val match = Regex("novo([A-Za-z0-9_]+)\\(.*\\)").find(ctx.text)
+    private fun solveClass(ctx: MagParser.PrimarioContext): Value {
+        val match = Regex(pattern = "novo([A-Za-z0-9_]+)\\(.*\\)").find(ctx.text)
         if (match != null) {
             val className = match.groupValues[1]
 
@@ -753,7 +751,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
     }
 
 
-    override fun visitPrimario(ctx: PlarParser.PrimarioContext): Value {
+    override fun visitPrimario(ctx: MagParser.PrimarioContext): Value {
         return when {
             ctx.text == "nulo" -> Value.Null
             ctx.listaLiteral() != null -> visit(ctx.listaLiteral())
@@ -778,7 +776,7 @@ class Interpreter : PlarBaseVisitor<Value>() {
     }
 
     //TODO: do more tests on this function....
-    private fun extractConstructorArgs(ctx: PlarParser.PrimarioContext): List<Value> {
+    private fun extractConstructorArgs(ctx: MagParser.PrimarioContext): List<Value> {
         val args = mutableListOf<Value>()
         if (!ctx.argumentos().isEmpty) {
             ctx.argumentos().expressao().forEach { expr ->
@@ -792,9 +790,9 @@ class Interpreter : PlarBaseVisitor<Value>() {
     private fun initializeBaseClassFields(`object`: Value.Object, baseClassName: String) {
         val baseClass = global.getClass(baseClassName) ?: return
 
-        val superBaseClass = global.getSuperClasse(baseClass)
-        if (superBaseClass != null) {
-            initializeBaseClassFields(`object`, superBaseClass)
+        val superClass = global.getSuperClasse(baseClass)
+        if (superClass != null) {
+            initializeBaseClassFields(`object`, superClass)
         }
 
         baseClass.declaracaoVar().forEach { decl ->
@@ -810,13 +808,12 @@ class Interpreter : PlarBaseVisitor<Value>() {
     }
 
     private fun createClassObject(
-        nomeClasse: String, ctx: PlarParser.PrimarioContext, classe: PlarParser.DeclaracaoClasseContext
+        nomeClasse: String, ctx: MagParser.PrimarioContext, classe: MagParser.DeclaracaoClasseContext
     ): Value {
         val superClass = global.getSuperClasse(classe)
         val interfaces = global.getInterfaces(classe)
 
         val `object` = Value.Object(nomeClasse, mutableMapOf(), superClass, interfaces)
-
         if (superClass != null) initializeBaseClassFields(`object`, superClass)
 
         classe.declaracaoVar().forEach { decl ->

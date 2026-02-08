@@ -9,4 +9,3 @@ fun isReturnInvalid(retorno: String?, global: Environment): Boolean {
         "Inteiro", "Real", "Texto", "Logico", "Nulo", "Lista", "Mapa"
     ) && (!global.classExists(retorno) && !global.interfaceExists(retorno))
 }
-

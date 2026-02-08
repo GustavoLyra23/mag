@@ -2,8 +2,8 @@ import core.Interpreter
 import helpers.solvePath
 import helpers.validateFile
 import org.antlr.v4.runtime.*
-import org.gustavolyra.PlarLexer
-import org.gustavolyra.PlarParser
+import org.gustavolyra.MagLexer
+import org.gustavolyra.MagParser
 import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.system.exitProcess
@@ -13,7 +13,7 @@ val STATIC_PATH: Path =
     Path.of(System.getProperty("user.dir")) //cwd
 
 fun main() {
-    println("Iniciando Interpretador Plar")
+    println("Iniciando Interpretador Mag")
     when {
 //       args.getOrNull(0) == "run" && args.size > 1 -> execFile(args[1])
         //REPL direto...
@@ -55,9 +55,9 @@ fun execFile(file: Path) {
 fun execInterpreter(code: String) {
     try {
         val input = CharStreams.fromString(code)
-        val lexer = PlarLexer(input)
+        val lexer = MagLexer(input)
         val tokens = CommonTokenStream(lexer)
-        val parser = PlarParser(tokens)
+        val parser = MagParser(tokens)
         parser.removeErrorListeners()
         parser.addErrorListener(object : BaseErrorListener() {
             override fun syntaxError(
@@ -74,7 +74,7 @@ fun execInterpreter(code: String) {
 
         val tree = parser.programa()
         if (tree == null) {
-            println("ERRO: Analise sintatica falhou arvore sintática nula...!")
+            println("Analise sintatica falhou arvore sintatica nula!")
             return
         }
         interpreter.interpret(tree)

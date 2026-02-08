@@ -42,7 +42,7 @@ fun resolveAddOperator(left: Value, right: Value): Value {
         }
 
         else -> {
-            throw RuntimeException("Operador '+' não suportado para ${left::class.simpleName} e ${right::class.simpleName}")
+            throw RuntimeException("Operador '+' nao suportado para ${left::class.simpleName} e ${right::class.simpleName}")
         }
     }
 }
@@ -70,7 +70,7 @@ fun solveSubOperator(left: Value, right: Value): Value {
         }
 
         else -> {
-            throw RuntimeException("Operador '-' não suportado para ${left::class.simpleName} e ${right::class.simpleName}")
+            throw RuntimeException("Operador '-' nao suportado para ${left::class.simpleName} e ${right::class.simpleName}")
         }
     }
 }
