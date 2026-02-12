@@ -20,24 +20,24 @@ import java.net.ServerSocket
 import java.nio.file.Path
 import java.util.*
 
-fun defineDefaultFunctions(global: Environment) {
-    registerIOFunctions(global)
-    registerThreadFunctions(global)
-    registerExceptionsFunctions(global)
-    registerTypeFunctions(global)
-    registerCollectionsFunctions(global)
+fun defineDefaultFunctions(env: Environment) {
+    registerIOFunctions(env)
+    registerThreadFunctions(env)
+    registerExceptionsFunctions(env)
+    registerTypeFunctions(env)
+    registerCollectionsFunctions(env)
 }
 
-fun registerIOFunctions(global: Environment) {
-    global.define("ler", Value.Fun("ler", null, "Texto", global) { args ->
+fun registerIOFunctions(env: Environment) {
+    env.define("ler", Value.Fun("ler", null, "Texto", env) { args ->
         Scanner(System.`in`).nextLine().let { Value.Text(it) }
     })
-    global.define("diretorio_atual", Value.Fun("atual_dir", null, "Texto", global) {
+    env.define("diretorio_atual", Value.Fun("atual_dir", null, "Texto", env) {
         Value.Text(
             Path.of(System.getProperty("user.dir")).toAbsolutePath().normalize().toString()
         )
     })
-    global.define("ler_arquivo", Value.Fun("ler_arquivo", null, "Texto", global) { args ->
+    env.define("ler_arquivo", Value.Fun("ler_arquivo", null, "Texto", env) { args ->
         if (args.isEmpty()) throw RuntimeException("Funcao ler_arquivo requer um argumento (caminho do arquivo)")
         if (args.size > 1) throw RuntimeException("Funcaoo ler_arquivo aceita apenas um argumento")
 
@@ -52,8 +52,8 @@ fun registerIOFunctions(global: Environment) {
             throw ArquivoException("Erro ao ler arquivo '${argVal.value}': ${e.message}")
         }
     })
-    global.define("escrever_arquivo", Value.Fun("escrever_arquivo", null, null, global) { args ->
-        require(args.size in 2..3) { "Função escrever_arquivo requer 2 ou 3 argumentos" }
+    env.define("escrever_arquivo", Value.Fun("escrever_arquivo", null, null, env) { args ->
+        require(args.size in 2..3) { "Funçao escrever_arquivo requer 2 ou 3 argumentos" }
         val (path, data) = args.take(2)
         val append = args.getOrNull(2)
 
@@ -70,17 +70,17 @@ fun registerIOFunctions(global: Environment) {
         }
         Value.Null
     })
-    global.define("escrever", Value.Fun("escrever", null, null, global) { args ->
+    env.define("escrever", Value.Fun("escrever", null, null, env) { args ->
         val values = args.map { extractValueToPrint(it) }
         println(values.joinToString(" "))
         Value.Null
     })
-    global.define("imprimir", Value.Fun("imprimir", null, null, global) { args ->
+    env.define("imprimir", Value.Fun("imprimir", null, null, env) { args ->
         val values = args.map { extractValueToPrint(it) }
         println(values.joinToString(" "))
         Value.Null
     })
-    global.define("ler_socket", Value.Fun("ler_socket", null, "Texto", global) { args ->
+    env.define("ler_socket", Value.Fun("ler_socket", null, "Texto", env) { args ->
         try {
             val (host, port) = getHostAndPortFromArgs(args)
             val socket = ServerSocket()
@@ -94,7 +94,7 @@ fun registerIOFunctions(global: Environment) {
             throw MagRuntimeException("Nao foi possivel configurar o socket: ${e.message}")
         }
     })
-    global.define("escrever_socket", Value.Fun("escrever_socket", null, null, global) { args ->
+    env.define("escrever_socket", Value.Fun("escrever_socket", null, null, env) { args ->
         try {
             if (args.isEmpty() || args.size != 1 && args.size < 3) throw InputException("argumentos invalidos pra socket_write")
             val (host, port) = getHostAndPortFromArgs(args)
@@ -112,8 +112,8 @@ fun registerIOFunctions(global: Environment) {
     })
 }
 
-fun registerThreadFunctions(global: Environment) {
-    global.define("executar", Value.Fun("executar", null, null, global) { args ->
+fun registerThreadFunctions(env: Environment) {
+    env.define("executar", Value.Fun("executar", null, null, env) { args ->
         if (args.isEmpty() || args[0] !is Value.Fun) throw RuntimeException("Argumento invalido para a funcao.")
         val execFun = args[0] as Value.Fun
         val realArgs = args.drop(1)
@@ -129,10 +129,10 @@ fun registerThreadFunctions(global: Environment) {
         }
         Value.Null
     })
-    global.define("dormir", Value.Fun("aguardar", null, null, global) { args ->
-        if (args.isEmpty()) throw RuntimeException("Função aguardar requer um argumento (milissegundos)")
+    env.define("dormir", Value.Fun("dormir", null, null, env) { args ->
+        if (args.isEmpty()) throw RuntimeException("Funcao dormir  requer um argumento (milissegundos)")
         val time = args[0]
-        if (time !is Value.Integer) throw RuntimeException("Argumento deve ser um número inteiro (milissegundos)")
+        if (time !is Value.Integer) throw RuntimeException("Argumento deve ser um numero inteiro (milissegundos)")
         runBlocking {
             delay(time.value.toLong())
         }
@@ -140,8 +140,8 @@ fun registerThreadFunctions(global: Environment) {
     })
 }
 
-fun registerExceptionsFunctions(global: Environment) {
-    global.define("jogarError", Value.Fun("jogarError", null, null, global) { args ->
+fun registerExceptionsFunctions(env: Environment) {
+    env.define("jogarError", Value.Fun("jogarError", null, null, env) { args ->
         if (args.isEmpty()) {
             throw InputException("Funcaoo jogarError requer um argumento (mensagem de erro)")
         }
@@ -153,9 +153,9 @@ fun registerExceptionsFunctions(global: Environment) {
     })
 }
 
-fun registerTypeFunctions(global: Environment) {
-    registerCastFunction(global)
-    registerGetValueType(global)
+fun registerTypeFunctions(env: Environment) {
+    registerCastFunction(env)
+    registerGetValueType(env)
 }
 
 fun registerGetValueType(env: Environment) {
@@ -168,7 +168,6 @@ fun registerGetValueType(env: Environment) {
             )
         })
 }
-
 
 fun registerCastFunction(env: Environment) {
     var returnType = "";
@@ -237,9 +236,8 @@ fun registerCastFunction(env: Environment) {
     env.define("converter_tipo", fn)
 }
 
-
-fun registerCollectionsFunctions(global: Environment) {
-    global.define("tamanho", Value.Fun("tamanho", null, "Inteiro", global) { args ->
+fun registerCollectionsFunctions(env: Environment) {
+    env.define("tamanho", Value.Fun("tamanho", null, "Inteiro", env) { args ->
         if (args.isEmpty()) {
             throw InputException("Funcao tamanho requer um argumento (lista, mapa ou texto)")
         }
