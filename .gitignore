@@ -17,8 +17,8 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
-!bibliotecas
-!test_files
+/bibliotecas/
+/test_files/
 
 ### Kotlin ###
 .kotlin
