@@ -49,7 +49,6 @@ class Interpreter : MagBaseVisitor<Value>() {
         }
     }
 
-
     fun processImport(filName: String) {
         if (importedModules.contains(filName)) return
         importedModules.add(filName)
@@ -185,6 +184,7 @@ class Interpreter : MagBaseVisitor<Value>() {
 
     //TODO: refactor visit return declaration
     override fun visitDeclaracaoRetornar(ctx: MagParser.DeclaracaoRetornarContext): Value {
+
         val returnVal = ctx.expressao()?.let { visit(it) } ?: Value.Null
         // apenas valida se estivermos dentro de uma funcao
         if (actualFunction != null && actualFunction!!.returnType != null) {
@@ -349,7 +349,7 @@ class Interpreter : MagBaseVisitor<Value>() {
         }
         return left
     }
-    
+
     override fun visitAdicao(ctx: MagParser.AdicaoContext): Value {
         var left = visit(ctx.multiplicacao(0))
         for (i in 1 until ctx.multiplicacao().size) {
@@ -723,6 +723,7 @@ class Interpreter : MagBaseVisitor<Value>() {
     }
 
     private fun solveId(ctx: MagParser.PrimarioContext): Value {
+
         val name = ctx.ID().text
         if (ctx.childCount > 1 && ctx.getChild(1).text == "(") {
             val arguments = if (ctx.childCount > 2 && ctx.getChild(2) is MagParser.ArgumentosContext) {

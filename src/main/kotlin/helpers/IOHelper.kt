@@ -8,7 +8,6 @@ import java.nio.file.Path
 
 fun solvePath(pathName: String): Path {
     val path = Path.of(pathName)
-
     return if (path.isAbsolute) {
         path.normalize()
     } else {

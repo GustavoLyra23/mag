@@ -22,20 +22,18 @@ class GithubGateway {
     suspend fun getLibrary(libUrl: String, destDir: Path) {
         log.info("Buscando biblioteca: $libUrl")
         delay(5000) // only for visual test... remove this later...
+        if (!destDir.exists()) destDir.toFile().mkdir()
         val finalFolderName = libUrl.substringAfterLast("/").removeSuffix(".git")
+        print("Folder name $finalFolderName")
         val targetDir = destDir.resolve(finalFolderName)
         if (targetDir.exists()) {
             runCLICommand(
-                listOf("git", "fetch", "--all", "--prune"),
-                workingDir = targetDir
+                listOf("git", "fetch", "--all", "--prune"), workingDir = targetDir
             )
         } else {
             runCLICommand(
                 listOf(
-                    "git",
-                    "clone",
-                    libUrl,
-                    targetDir.toString()
+                    "git", "clone", libUrl,
                 ), workingDir = destDir
             )
         }

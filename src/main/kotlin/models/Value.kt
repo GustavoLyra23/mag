@@ -29,7 +29,11 @@ sealed class Value {
 
     data class Param(val name: String, val type: String)
 
-    data class Interface(val name: String, val signatures: kotlin.collections.Map<String, Method>) : Value()
+    data class Interface(
+        val name: String,
+        val signatures:
+        kotlin.collections.Map<String, Method>
+    ) : Value()
 
     class Method(
         val name: String,

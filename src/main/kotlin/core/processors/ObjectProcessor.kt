@@ -62,6 +62,7 @@ fun validateInterfaceImplementation(
     return iface.assinaturaMetodo().all { it.ID().text in fornecidos }
 }
 
+
 fun visitClasses(tree: ProgramaContext, global: Environment) {
     tree.declaracao().forEach { decl ->
         decl.declaracaoClasse()?.let {

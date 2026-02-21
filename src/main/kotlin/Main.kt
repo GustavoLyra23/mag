@@ -1,12 +1,10 @@
 import core.Interpreter
 import core.gateways.GithubGateway
 import core.io.AnimateCLI
+import core.io.ConfigLoader
 import helpers.solvePath
 import helpers.validateFile
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.antlr.v4.runtime.*
 import org.gustavolyra.MagLexer
 import org.gustavolyra.MagParser
@@ -20,12 +18,14 @@ var interpreter = Interpreter()
 val STATIC_PATH: Path = Path.of(System.getProperty("user.dir")) //cwd
 val mainLog: Logger = LoggerFactory.getLogger("Main")
 
-fun main() = runBlocking() {
+suspend fun main() {
     mainLog.info("Iniciando Interpretador Mag")
-    interactiveMode(this);
+    interactiveMode();
 }
 
-suspend fun interactiveMode(scope: CoroutineScope) {
+@OptIn(DelicateCoroutinesApi::class)
+suspend fun interactiveMode() {
+
     mainLog.info("Digite 'sair' para interromper o programa")
     mainLog.info("Digite 'run <caminho>' para executar um arquivo")
     while (true) {
@@ -35,23 +35,25 @@ suspend fun interactiveMode(scope: CoroutineScope) {
             input == "sair" -> exitProcess(0)
             input.startsWith("importar") -> {
                 val inputArray = input.split(" ");
-                val animJob = scope.launch {
-                    AnimateCLI.runLoadAnimation()
+                runBlocking {
+                    val animJob: Job = launch {
+                        AnimateCLI.runLoadAnimation()
+                    }
+                    val downloadJob: Job = launch(Dispatchers.IO) {
+                        GithubGateway.instance.getLibrary(
+                            inputArray[1], Path.of("bibliotecas")
+                        )
+                    }
+                    downloadJob.join()
+                    animJob.cancel()
                 }
-                scope.launch(Dispatchers.IO) {
-                    GithubGateway.instance.getLibrary(
-                        inputArray[1],
-                        Path.of("bibliotecas")
-                    )
-                }.join()
-                animJob.cancel()
                 println()
             }
 
             input.startsWith("run ") -> {
                 val path = input.substring(4).trim()
-                val file = solvePath(path)
-                execFile(file)
+                val filePath = solvePath(path)
+                execFile(filePath)
             }
 
             input == "reset" -> interpreter = Interpreter()
@@ -60,10 +62,11 @@ suspend fun interactiveMode(scope: CoroutineScope) {
     }
 }
 
-fun execFile(file: Path) {
+suspend fun execFile(filePath: Path) {
     try {
-        if (!validateFile(file.toFile())) return
-        val fileData = file.readText()
+        ConfigLoader().load()
+        if (!validateFile(filePath.toFile())) return
+        val fileData = filePath.readText()
         execInterpreter(fileData)
     } catch (e: Exception) {
         mainLog.error("Erro ao ler/executar o arquivo: ${e.message}")
